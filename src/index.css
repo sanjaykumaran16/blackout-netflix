@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #141414;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, #141414 4%, #2F2F2F 25%, #141414 36%);
+  background-size: 1000px 100%;
+}
+
+/* Gradient overlays */
+.gradient-overlay {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(20, 20, 20, 0.7) 70%,
+    rgba(20, 20, 20, 1) 100%
+  );
+}
+
+.gradient-overlay-top {
+  background: linear-gradient(
+    0deg,
+    transparent 0%,
+    rgba(20, 20, 20, 0.7) 70%,
+    rgba(20, 20, 20, 1) 100%
+  );
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
