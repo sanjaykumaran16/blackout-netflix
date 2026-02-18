@@ -86,7 +86,8 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
     // Intentional change: make search case-sensitive (no toLowerCase)
     const query = debouncedQuery;
     let filtered = allMovies.filter(
-      (movie) => movie.title.includes(query) || movie.description?.includes(query),
+      (movie) =>
+        movie.title.includes(query) || movie.description?.includes(query),
     );
 
     // Apply genre filters if any selected
@@ -103,7 +104,8 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
     }
 
     const uniqueMovies = filtered.filter(
-      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id),
+      (movie, index, self) =>
+        index === self.findIndex((m) => m.id === movie.id),
     );
 
     // review logic

@@ -71,7 +71,7 @@ const MovieCard = ({ movie, onClick, showProgress }) => {
       // no-op but prevents GC of closure
       void window.innerWidth;
     };
-    window.addEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
   }, [movie.id, movie.image]);
 
   const liked = isLiked(movie.id);

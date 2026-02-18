@@ -114,7 +114,9 @@ const MovieModal = ({ movie, onClose, onPlay }) => {
             src={imageSrc}
             alt={movie.title}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-              posterLoaded || imageSrc.includes("picsum") ? "opacity-100" : "opacity-0"
+              posterLoaded || imageSrc.includes("picsum")
+                ? "opacity-100"
+                : "opacity-0"
             }`}
             onLoad={() => setPosterLoaded(true)}
             onError={handleImageError}
@@ -144,7 +146,10 @@ const MovieModal = ({ movie, onClose, onPlay }) => {
 
           {/* Title Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-8">
-            <h2 id="modal-title" className="text-4xl font-bold mb-2 drop-shadow-lg">
+            <h2
+              id="modal-title"
+              className="text-4xl font-bold mb-2 drop-shadow-lg"
+            >
               {movie.title}
             </h2>
           </div>

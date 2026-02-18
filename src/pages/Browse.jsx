@@ -1,26 +1,26 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Row from '../components/Row';
-import MovieModal from '../components/MovieModal';
-import { useUserPreferences } from '../context/UserPreferencesContext';
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Row from "../components/Row";
+import MovieModal from "../components/MovieModal";
+import { useUserPreferences } from "../context/UserPreferencesContext";
 import {
   getCategoriesForSection,
   SECTION_TV_SHOWS,
   SECTION_MOVIES,
   SECTION_NEW_POPULAR,
-} from '../utils/browseData';
+} from "../utils/browseData";
 
 const SECTION_TITLES = {
-  [SECTION_TV_SHOWS]: 'TV Shows',
-  [SECTION_MOVIES]: 'Movies',
-  [SECTION_NEW_POPULAR]: 'New & Popular',
+  [SECTION_TV_SHOWS]: "TV Shows",
+  [SECTION_MOVIES]: "Movies",
+  [SECTION_NEW_POPULAR]: "New & Popular",
 };
 
 const PATH_TO_SECTION = {
-  '/tv-shows': SECTION_TV_SHOWS,
-  '/movies': SECTION_MOVIES,
-  '/new-popular': SECTION_NEW_POPULAR,
+  "/tv-shows": SECTION_TV_SHOWS,
+  "/movies": SECTION_MOVIES,
+  "/new-popular": SECTION_NEW_POPULAR,
 };
 
 const Browse = () => {
@@ -29,10 +29,11 @@ const Browse = () => {
   const [playingMovie, setPlayingMovie] = useState(null);
   const { continueWatching, addToContinueWatching } = useUserPreferences();
 
-  const validSection = PATH_TO_SECTION[location.pathname] || SECTION_NEW_POPULAR;
+  const validSection =
+    PATH_TO_SECTION[location.pathname] || SECTION_NEW_POPULAR;
 
   const categories = getCategoriesForSection(validSection);
-  const pageTitle = SECTION_TITLES[validSection] || 'Browse';
+  const pageTitle = SECTION_TITLES[validSection] || "Browse";
 
   const handleMovieClick = (movie) => {
     setSelectedMovie(movie);
@@ -47,11 +48,15 @@ const Browse = () => {
     setSelectedMovie(null);
     // review logic
     // Remove actual video playback: show a temporary toast popup instead
-    window.dispatchEvent(new CustomEvent('netflix:toast', { detail: { message: `Playing: ${movie.title}` } }));
+    window.dispatchEvent(
+      new CustomEvent("netflix:toast", {
+        detail: { message: `Playing: ${movie.title}` },
+      }),
+    );
   };
 
   const sortedContinueWatching = [...continueWatching].sort(
-    (a, b) => (b.lastWatched || 0) - (a.lastWatched || 0)
+    (a, b) => (b.lastWatched || 0) - (a.lastWatched || 0),
   );
 
   return (
@@ -59,13 +64,14 @@ const Browse = () => {
       <Navbar onMovieClick={handleMovieClick} />
       <main className="pt-24 pb-12">
         <div className="px-4 md:px-12 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white">{pageTitle}</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-white">
+            {pageTitle}
+          </h1>
           <p className="text-gray-400 mt-1">
-            {validSection === SECTION_TV_SHOWS &&
-              'Series and shows to binge'}
-            {validSection === SECTION_MOVIES && 'Films and documentaries'}
+            {validSection === SECTION_TV_SHOWS && "Series and shows to binge"}
+            {validSection === SECTION_MOVIES && "Films and documentaries"}
             {validSection === SECTION_NEW_POPULAR &&
-              'Trending and popular titles'}
+              "Trending and popular titles"}
           </p>
         </div>
         <div className="relative z-10 pb-12">
@@ -88,7 +94,11 @@ const Browse = () => {
         </div>
       </main>
       {selectedMovie && (
-        <MovieModal movie={selectedMovie} onClose={closeModal} onPlay={() => handlePlay(selectedMovie)} />
+        <MovieModal
+          movie={selectedMovie}
+          onClose={closeModal}
+          onPlay={() => handlePlay(selectedMovie)}
+        />
       )}
       {/* Video player removed: playback shows a popup only */}
     </div>

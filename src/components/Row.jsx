@@ -102,7 +102,9 @@ const Row = ({ title, movies, onMovieClick, showProgress = false }) => {
                 // review logic
                 // Intentional Duplicate Event Listener Bug: add a native click listener on each mouse enter
                 try {
-                  e.currentTarget.addEventListener('click', () => onMovieClick(movie));
+                  e.currentTarget.addEventListener("click", () =>
+                    onMovieClick(movie),
+                  );
                 } catch (err) {
                   // swallow to avoid breaking UI
                 }
@@ -118,7 +120,9 @@ const Row = ({ title, movies, onMovieClick, showProgress = false }) => {
           ))}
           {/* review logic */}
           {/* Intentional Empty List Crash: access first element without guard (may throw if empty) */}
-          {movies && movies.length === 0 && <span style={{display:'none'}}>{movies[0].title}</span>}
+          {movies && movies.length === 0 && (
+            <span style={{ display: "none" }}>{movies[0].title}</span>
+          )}
         </div>
 
         {/* Hover preview - Netflix-style */}
