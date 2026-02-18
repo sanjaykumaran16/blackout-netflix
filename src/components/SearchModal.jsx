@@ -64,7 +64,7 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
             .split(",")
             .map((g) => g.trim().toLowerCase())
             .filter(Boolean);
-          return selectedGenres.some((sg) =>
+          return selectedGenres.every((sg) =>
             movieGenres.includes(sg.toLowerCase()),
           );
         });
@@ -90,14 +90,14 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
         movie.title.includes(query) || movie.description?.includes(query),
     );
 
-    // Apply genre filters if any selected
+    // M6 Intentional bug: genre filter requires ALL selected genres (AND), unintentionally limiting results
     if (selectedGenres.length > 0) {
       filtered = filtered.filter((movie) => {
         const movieGenres = (movie.genres || "")
           .split(",")
           .map((g) => g.trim().toLowerCase())
           .filter(Boolean);
-        return selectedGenres.some((sg) =>
+        return selectedGenres.every((sg) =>
           movieGenres.includes(sg.toLowerCase()),
         );
       });
@@ -108,8 +108,7 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
         index === self.findIndex((m) => m.id === movie.id),
     );
 
-    // review logic
-    // Intentional Loading Spinner Timing Bug: delay applying results so spinner disappears early
+    // M7: results applied after 400ms so there is a visible gap after spinner is already gone
     const t = setTimeout(() => {
       setFilteredMovies(uniqueMovies);
       setHighlighted(-1);
@@ -117,14 +116,12 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
     return () => clearTimeout(t);
   }, [debouncedQuery]);
 
-  // Loading spinner timing bug: spinner disappears before results render
+  // M7 Intentional bug: spinner disappears almost immediately; results arrive 400ms later = visible delay with no loading indicator
   useEffect(() => {
     if (debouncedQuery === "") return;
     setIsSearching(true);
-    // hide spinner early (300ms before data is set) by scheduling earlier timeout
-    const early = setTimeout(() => setIsSearching(false), 100);
-    // ensure spinner removed once results are applied via existing logic
-    return () => clearTimeout(early);
+    const hideSpinner = setTimeout(() => setIsSearching(false), 0);
+    return () => clearTimeout(hideSpinner);
   }, [debouncedQuery]);
 
   // Re-filter when selected genres change
@@ -139,7 +136,7 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
             .split(",")
             .map((g) => g.trim().toLowerCase())
             .filter(Boolean);
-          return selectedGenres.some((sg) =>
+          return selectedGenres.every((sg) =>
             movieGenres.includes(sg.toLowerCase()),
           );
         });
@@ -171,7 +168,7 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
           .split(",")
           .map((g) => g.trim().toLowerCase())
           .filter(Boolean);
-        return selectedGenres.some((sg) =>
+        return selectedGenres.every((sg) =>
           movieGenres.includes(sg.toLowerCase()),
         );
       });

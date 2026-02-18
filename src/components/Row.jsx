@@ -92,9 +92,8 @@ const Row = ({ title, movies, onMovieClick, showProgress = false }) => {
           className="flex gap-3 overflow-x-scroll hide-scrollbar py-4 px-1"
           onScroll={(e) => setScrollPosition(e.target.scrollLeft)}
         >
-          {/* review logic */}
-          {/* Intentional Off-by-One Rendering Bug: skip the last item */}
-          {(movies || []).slice(0, (movies || []).length - 1).map((movie) => (
+          {/* Intentional Off-by-One Bug: render one fewer card by excluding the last item (slice 0 to -1) */}
+          {((movies || []).slice(0, -1)).map((movie) => (
             <div
               key={movie.id}
               onMouseEnter={(e) => {
