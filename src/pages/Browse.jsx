@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Row from '../components/Row';
 import MovieModal from '../components/MovieModal';
-import VideoPlayer from '../components/VideoPlayer';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 import {
   getCategoriesForSection,
@@ -46,7 +45,9 @@ const Browse = () => {
   const handlePlay = (movie) => {
     addToContinueWatching(movie, 0);
     setSelectedMovie(null);
-    setPlayingMovie(movie);
+    // review logic
+    // Remove actual video playback: show a temporary toast popup instead
+    window.dispatchEvent(new CustomEvent('netflix:toast', { detail: { message: `Playing: ${movie.title}` } }));
   };
 
   const sortedContinueWatching = [...continueWatching].sort(
@@ -89,9 +90,7 @@ const Browse = () => {
       {selectedMovie && (
         <MovieModal movie={selectedMovie} onClose={closeModal} onPlay={() => handlePlay(selectedMovie)} />
       )}
-      {playingMovie && (
-        <VideoPlayer movie={playingMovie} onClose={() => setPlayingMovie(null)} onNext={() => { addToContinueWatching(playingMovie, 100); setPlayingMovie(null); }} />
-      )}
+      {/* Video player removed: playback shows a popup only */}
     </div>
   );
 };

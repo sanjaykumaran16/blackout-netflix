@@ -6,7 +6,10 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [filteredMovies, setFilteredMovies] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState([]);
   const inputRef = useRef(null);
 
   // Get all movies from all categories
@@ -14,6 +17,17 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
     featuredMovie,
     ...movieCategories.flatMap((category) => category.movies),
   ];
+
+  // Compute available genres from all movies
+  const availableGenres = Array.from(
+    new Set(
+      allMovies
+        .flatMap((m) =>
+          m.genres ? m.genres.split(",").map((g) => g.trim()) : [],
+        )
+        .filter(Boolean),
+    ),
+  ).sort();
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -34,24 +48,132 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
     `https://picsum.photos/seed/${movieId}/120/70`;
 
   // Debounce input to avoid filtering on every keystroke
+  // review logic
+  // Intentional change: do NOT trim spaces and keep case-sensitivity
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 250);
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 250);
     return () => clearTimeout(t);
   }, [searchQuery]);
 
   useEffect(() => {
     if (debouncedQuery === "") {
+      // If no text query but genres are selected, show movies matching genres
+      if (selectedGenres.length > 0) {
+        let filtered = allMovies.filter((movie) => {
+          const movieGenres = (movie.genres || "")
+            .split(",")
+            .map((g) => g.trim().toLowerCase())
+            .filter(Boolean);
+          return selectedGenres.some((sg) =>
+            movieGenres.includes(sg.toLowerCase()),
+          );
+        });
+
+        const uniqueMovies = filtered.filter(
+          (movie, index, self) =>
+            index === self.findIndex((m) => m.id === movie.id),
+        );
+        setFilteredMovies(uniqueMovies);
+        setHighlighted(-1);
+        return;
+      }
+      setFilteredMovies([]);
+      setHighlighted(-1);
+      return;
+    }
+
+    // review logic
+    // Intentional change: make search case-sensitive (no toLowerCase)
+    const query = debouncedQuery;
+    let filtered = allMovies.filter(
+      (movie) => movie.title.includes(query) || movie.description?.includes(query),
+    );
+
+    // Apply genre filters if any selected
+    if (selectedGenres.length > 0) {
+      filtered = filtered.filter((movie) => {
+        const movieGenres = (movie.genres || "")
+          .split(",")
+          .map((g) => g.trim().toLowerCase())
+          .filter(Boolean);
+        return selectedGenres.some((sg) =>
+          movieGenres.includes(sg.toLowerCase()),
+        );
+      });
+    }
+
+    const uniqueMovies = filtered.filter(
+      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id),
+    );
+
+    // review logic
+    // Intentional Loading Spinner Timing Bug: delay applying results so spinner disappears early
+    const t = setTimeout(() => {
+      setFilteredMovies(uniqueMovies);
+      setHighlighted(-1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [debouncedQuery]);
+
+  // Loading spinner timing bug: spinner disappears before results render
+  useEffect(() => {
+    if (debouncedQuery === "") return;
+    setIsSearching(true);
+    // hide spinner early (300ms before data is set) by scheduling earlier timeout
+    const early = setTimeout(() => setIsSearching(false), 100);
+    // ensure spinner removed once results are applied via existing logic
+    return () => clearTimeout(early);
+  }, [debouncedQuery]);
+
+  // Re-filter when selected genres change
+  useEffect(() => {
+    // trigger the same logic as debouncedQuery effect by updating debouncedQuery state
+    // but avoid changing the user's input; instead, recalc here
+    // If there's no text query, but genres changed, show genre-only results
+    if (debouncedQuery === "") {
+      if (selectedGenres.length > 0) {
+        let filtered = allMovies.filter((movie) => {
+          const movieGenres = (movie.genres || "")
+            .split(",")
+            .map((g) => g.trim().toLowerCase())
+            .filter(Boolean);
+          return selectedGenres.some((sg) =>
+            movieGenres.includes(sg.toLowerCase()),
+          );
+        });
+
+        const uniqueMovies = filtered.filter(
+          (movie, index, self) =>
+            index === self.findIndex((m) => m.id === movie.id),
+        );
+
+        setFilteredMovies(uniqueMovies);
+        setHighlighted(-1);
+        return;
+      }
       setFilteredMovies([]);
       setHighlighted(-1);
       return;
     }
 
     const query = debouncedQuery.toLowerCase();
-    const filtered = allMovies.filter(
+    let filtered = allMovies.filter(
       (movie) =>
         movie.title.toLowerCase().includes(query) ||
         movie.description?.toLowerCase().includes(query),
     );
+
+    if (selectedGenres.length > 0) {
+      filtered = filtered.filter((movie) => {
+        const movieGenres = (movie.genres || "")
+          .split(",")
+          .map((g) => g.trim().toLowerCase())
+          .filter(Boolean);
+        return selectedGenres.some((sg) =>
+          movieGenres.includes(sg.toLowerCase()),
+        );
+      });
+    }
 
     const uniqueMovies = filtered.filter(
       (movie, index, self) =>
@@ -60,7 +182,7 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
 
     setFilteredMovies(uniqueMovies);
     setHighlighted(-1);
-  }, [debouncedQuery]);
+  }, [selectedGenres]);
 
   useEffect(() => {
     if (isOpen) {
@@ -152,6 +274,27 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
                 placeholder="Search for movies, shows..."
                 className="w-full bg-transparent text-white text-xl md:text-2xl placeholder-gray-500 border-none outline-none focus:outline-none"
               />
+              {/* Filter toggle */}
+              <button
+                onClick={() => setShowFilters((s) => !s)}
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                aria-expanded={showFilters}
+                aria-label="Toggle genre filters"
+              >
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 5h18M6 12h12M10 19h4"
+                  />
+                </svg>
+              </button>
               {/* Suggestions dropdown */}
               {filteredMovies.length > 0 && (
                 <div className="absolute left-0 right-0 mt-2 bg-netflix-black border border-gray-800 rounded shadow-lg z-40 max-h-80 overflow-auto">
@@ -166,7 +309,10 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
                       className={`px-4 py-2 cursor-pointer flex items-center gap-3 hover:bg-gray-800 ${highlighted === idx ? "bg-gray-800" : ""}`}
                     >
                       <img
-                        src={getSmallVariant(m?.image) || getSearchPlaceholder(m.id)}
+                        src={
+                          getSmallVariant(m?.image) ||
+                          getSearchPlaceholder(m.id)
+                        }
                         alt=""
                         className="w-12 h-7 object-cover rounded"
                         onError={(e) => {
@@ -250,6 +396,61 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
                   </svg>
                 </button>
               )}
+
+              {/* Filters panel */}
+              {showFilters && (
+                <div className="absolute left-0 mt-2 w-full md:w-96 bg-netflix-black border border-gray-800 rounded shadow-lg z-50 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm text-white font-semibold">
+                      Filter by Genres
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowFilters(false);
+                      }}
+                      className="text-gray-400 hover:text-white"
+                      aria-label="Close filters"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-auto mb-3">
+                    {availableGenres.map((g) => (
+                      <label
+                        key={g}
+                        className="flex items-center gap-2 text-sm text-gray-300"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedGenres.includes(g)}
+                          onChange={() => {
+                            setSelectedGenres((prev) =>
+                              prev.includes(g)
+                                ? prev.filter((x) => x !== g)
+                                : [...prev, g],
+                            );
+                          }}
+                        />
+                        <span>{g}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => setSelectedGenres([])}
+                      className="text-sm text-gray-400 hover:text-white"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => setShowFilters(false)}
+                      className="bg-netflix-red text-white px-3 py-1 rounded text-sm"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -283,10 +484,16 @@ const SearchModal = ({ isOpen, onClose, onMovieClick }) => {
             </div>
           ) : (
             <div>
-              <h2 className="text-xl font-semibold text-white mb-6">
-                {filteredMovies.length}{" "}
-                {filteredMovies.length === 1 ? "result" : "results"} found
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-white">
+                  {filteredMovies.length}{" "}
+                  {filteredMovies.length === 1 ? "result" : "results"} found
+                </h2>
+                {/* Loading spinner (may hide earlier than results) */}
+                {isSearching && (
+                  <div className="text-sm text-gray-400">Searching...</div>
+                )}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {filteredMovies.map((movie) => (
                   <div key={movie.id} onClick={() => handleMovieSelect(movie)}>

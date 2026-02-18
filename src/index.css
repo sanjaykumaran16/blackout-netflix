@@ -70,3 +70,12 @@ html {
   background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
 }
+
+/* review logic */
+/* Responsive Breakpoint Bug: at exactly 768px, movie cards overlap */
+@media (width: 768px) {
+  .movie-card-overlap {
+    flex-basis: 45% !important;
+    max-width: 45% !important;
+  }
+}

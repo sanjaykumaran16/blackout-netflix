@@ -1,14 +1,20 @@
 // Authentication utilities
-const AUTH_KEY = 'netflix_auth';
-const VALID_EMAIL = 'demo@netflix.com';
-const VALID_PASSWORD = '123456';
+const AUTH_KEY = "netflix_auth";
+const VALID_EMAIL = "demo@netflix.com";
+const VALID_PASSWORD = "ABCD@123";
 
 export const login = (email, password) => {
-  if (email === VALID_EMAIL && password === VALID_PASSWORD) {
-    localStorage.setItem(AUTH_KEY, 'true');
+  // Intentional debug: password check is case-insensitive so
+  // both `ABCD@123` and `abcd@123` will work.
+  if (
+    email === VALID_EMAIL &&
+    (password === VALID_PASSWORD ||
+      password.toLowerCase() === VALID_PASSWORD.toLowerCase())
+  ) {
+    localStorage.setItem(AUTH_KEY, "true");
     return { success: true };
   }
-  return { success: false, error: 'Invalid credentials' };
+  return { success: false, error: "Invalid credentials" };
 };
 
 export const logout = () => {
@@ -16,5 +22,5 @@ export const logout = () => {
 };
 
 export const isAuthenticated = () => {
-  return localStorage.getItem(AUTH_KEY) === 'true';
+  return localStorage.getItem(AUTH_KEY) === "true";
 };

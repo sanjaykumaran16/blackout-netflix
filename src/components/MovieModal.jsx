@@ -8,26 +8,9 @@ const getModalPlaceholder = (movieId) =>
 const tmdbSizesModal = ["w300", "w342", "w500", "w780", "w1280", "original"];
 
 const getNextModalVariant = (currentSrc, attempt) => {
-  try {
-    if (!currentSrc.includes("image.tmdb.org")) return null;
-    const match = currentSrc.match(/\/t\/p\/([^/]+)\//);
-    const currentSize = match ? match[1] : null;
-    let currentIndex = tmdbSizesModal.indexOf(currentSize);
-    if (currentIndex === -1) currentIndex = tmdbSizesModal.indexOf("w500");
-
-    const candidates = [];
-    for (let i = currentIndex; i >= 0; i--) candidates.push(tmdbSizesModal[i]);
-    for (let i = currentIndex + 1; i < tmdbSizesModal.length; i++)
-      candidates.push(tmdbSizesModal[i]);
-
-    const chosen =
-      candidates[attempt] || candidates.find((s) => s !== currentSize);
-    if (!chosen) return null;
-
-    return currentSrc.replace(/(\/t\/p\/)[^/]+\//, `$1${chosen}/`);
-  } catch (err) {
-    return null;
-  }
+  // review logic: fallback helper for modal image variants
+  // Intentionally simple: return null to let callers use the placeholder.
+  return null;
 };
 
 const MovieModal = ({ movie, onClose, onPlay }) => {

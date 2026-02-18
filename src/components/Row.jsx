@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import MovieCard from "./MovieCard";
 import { useUserPreferences } from "../context/UserPreferencesContext";
+import { movieCategories, featuredWithType } from "../utils/browseData";
 
 const getHoverPlaceholder = (movieId) =>
   `https://picsum.photos/seed/${movieId}/288/160`;
@@ -35,6 +36,25 @@ const Row = ({ title, movies, onMovieClick, showProgress = false }) => {
     rowRef.current &&
     scrollPosition <
       rowRef.current.scrollWidth - rowRef.current.clientWidth - 10;
+
+  const getDisplayMovieForHover = (hovered) => {
+    if (!hovered) return null;
+    const replacementMap = {
+      8: 4,
+      9: 1,
+      10: 3,
+      11: 2,
+      12: 5,
+    };
+    if (title === "Popular on Netflix" && replacementMap[hovered.id]) {
+      const target = replacementMap[hovered.id];
+      for (const cat of movieCategories) {
+        const found = (cat.movies || []).find((m) => m.id === target);
+        if (found) return found;
+      }
+    }
+    return hovered;
+  };
 
   return (
     <div className="px-4 md:px-12 mb-8 group relative">
@@ -72,10 +92,21 @@ const Row = ({ title, movies, onMovieClick, showProgress = false }) => {
           className="flex gap-3 overflow-x-scroll hide-scrollbar py-4 px-1"
           onScroll={(e) => setScrollPosition(e.target.scrollLeft)}
         >
-          {(movies || []).map((movie) => (
+          {/* review logic */}
+          {/* Intentional Off-by-One Rendering Bug: skip the last item */}
+          {(movies || []).slice(0, (movies || []).length - 1).map((movie) => (
             <div
               key={movie.id}
-              onMouseEnter={() => setHoveredMovie(movie)}
+              onMouseEnter={(e) => {
+                setHoveredMovie(movie);
+                // review logic
+                // Intentional Duplicate Event Listener Bug: add a native click listener on each mouse enter
+                try {
+                  e.currentTarget.addEventListener('click', () => onMovieClick(movie));
+                } catch (err) {
+                  // swallow to avoid breaking UI
+                }
+              }}
               onMouseLeave={() => setHoveredMovie(null)}
             >
               <MovieCard
@@ -85,6 +116,9 @@ const Row = ({ title, movies, onMovieClick, showProgress = false }) => {
               />
             </div>
           ))}
+          {/* review logic */}
+          {/* Intentional Empty List Crash: access first element without guard (may throw if empty) */}
+          {movies && movies.length === 0 && <span style={{display:'none'}}>{movies[0].title}</span>}
         </div>
 
         {/* Hover preview - Netflix-style */}
@@ -97,113 +131,127 @@ const Row = ({ title, movies, onMovieClick, showProgress = false }) => {
               className="inline-block w-72 bg-netflix-black border border-gray-700 rounded shadow-2xl overflow-hidden pointer-events-auto"
               onMouseEnter={() => setHoveredMovie(hoveredMovie)}
             >
-              <div className="relative h-40 bg-black">
-                <img
-                  src={getHoverPlaceholder(hoveredMovie.id)}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover"
-                  aria-hidden
-                />
-                <img
-                  src={
-                    hoveredMovie?.image?.includes("image.tmdb.org")
-                      ? hoveredMovie.image.replace(
-                          /(\/t\/p\/)[^/]+\//,
-                          "$1w500/",
-                        )
-                      : hoveredMovie?.image || getHoverPlaceholder(hoveredMovie.id)
-                  }
-                  alt=""
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
-                    hoverPosterLoaded ? "opacity-100" : "opacity-0"
-                  }`}
-                  onLoad={() => setHoverPosterLoaded(true)}
-                  onError={() => setHoverPosterLoaded(false)}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-netflix-black to-transparent" />
-                <div className="absolute bottom-2 left-2 right-2 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={(ev) => {
-                      ev.preventDefault();
-                      ev.stopPropagation();
-                      onMovieClick(hoveredMovie);
-                    }}
-                    className="flex-shrink-0 w-8 h-8 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-200"
-                  >
-                    <svg
-                      className="w-4 h-4 ml-0.5"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(ev) => {
-                      ev.preventDefault();
-                      ev.stopPropagation();
-                      toggleMyList(hoveredMovie);
-                    }}
-                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isInMyList(hoveredMovie.id) ? "bg-white text-black" : "border-2 border-gray-400 text-white hover:border-white"}`}
-                  >
-                    {isInMyList(hoveredMovie.id) ? (
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(ev) => {
-                      ev.preventDefault();
-                      ev.stopPropagation();
-                      toggleLike(hoveredMovie);
-                    }}
-                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isLiked(hoveredMovie.id) ? "bg-netflix-red text-white" : "border-2 border-gray-400 text-white hover:border-white"}`}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill={isLiked(hoveredMovie.id) ? "currentColor" : "none"}
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeWidth={2}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              {/* Intentional bug: in the "Popular on Netflix" row, some hover previews show the wrong card */}
+              {(() => {
+                const displayMovie =
+                  getDisplayMovieForHover(hoveredMovie) || hoveredMovie;
+                return (
+                  <>
+                    <div className="relative h-40 bg-black">
+                      <img
+                        src={getHoverPlaceholder(displayMovie.id)}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        aria-hidden
                       />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div className="p-3">
-                <div className="flex items-center gap-2 text-xs text-green-500 font-semibold mb-1">
-                  {hoveredMovie.year && (
-                    <span className="text-gray-400">{hoveredMovie.year}</span>
-                  )}{" "}
-                  <span>98% Match</span>{" "}
-                  <span className="border border-gray-500 px-1 text-gray-400">
-                    HD
-                  </span>
-                </div>
-                <p className="text-gray-300 text-xs line-clamp-2">
-                  {hoveredMovie.description}
-                </p>
-              </div>
+                      <img
+                        src={
+                          displayMovie?.image?.includes("image.tmdb.org")
+                            ? displayMovie.image.replace(
+                                /(\/t\/p\/)[^/]+\//,
+                                "$1w500/",
+                              )
+                            : displayMovie?.image ||
+                              getHoverPlaceholder(displayMovie.id)
+                        }
+                        alt=""
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
+                          hoverPosterLoaded ? "opacity-100" : "opacity-0"
+                        }`}
+                        onLoad={() => setHoverPosterLoaded(true)}
+                        onError={() => setHoverPosterLoaded(false)}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-netflix-black to-transparent" />
+                      <div className="absolute bottom-2 left-2 right-2 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            onMovieClick(hoveredMovie);
+                          }}
+                          className="flex-shrink-0 w-8 h-8 rounded-full bg-white flex items-center justify-center text-black hover:bg-gray-200"
+                        >
+                          <svg
+                            className="w-4 h-4 ml-0.5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            toggleMyList(hoveredMovie);
+                          }}
+                          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isInMyList(hoveredMovie.id) ? "bg-white text-black" : "border-2 border-gray-400 text-white hover:border-white"}`}
+                        >
+                          {isInMyList(hoveredMovie.id) ? (
+                            <svg
+                              className="w-4 h-4"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            toggleLike(hoveredMovie);
+                          }}
+                          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isLiked(hoveredMovie.id) ? "bg-netflix-red text-white" : "border-2 border-gray-400 text-white hover:border-white"}`}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill={
+                              isLiked(hoveredMovie.id) ? "currentColor" : "none"
+                            }
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeWidth={2}
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-center gap-2 text-xs text-green-500 font-semibold mb-1">
+                        {displayMovie.year && (
+                          <span className="text-gray-400">
+                            {displayMovie.year}
+                          </span>
+                        )}{" "}
+                        <span>98% Match</span>{" "}
+                        <span className="border border-gray-500 px-1 text-gray-400">
+                          HD
+                        </span>
+                      </div>
+                      <p className="text-gray-300 text-xs line-clamp-2">
+                        {displayMovie.description}
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}

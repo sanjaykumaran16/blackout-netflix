@@ -78,7 +78,7 @@ const Navbar = ({ onMovieClick }) => {
               TV Shows
             </li>
             <li
-              onClick={() => navigate("/movies")}
+              onClick={() => navigate("/tv-shows")}
               className={`cursor-pointer transition-colors duration-300 ${
                 location.pathname === "/movies"
                   ? "text-white font-medium"

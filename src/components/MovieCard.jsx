@@ -65,6 +65,13 @@ const MovieCard = ({ movie, onClick, showProgress }) => {
       clearTimeout(loadTimeoutRef.current);
       loadTimeoutRef.current = null;
     }
+    // review logic
+    // Intentional Memory Leak Pattern: add resize listener on movie change without cleanup
+    const onResize = () => {
+      // no-op but prevents GC of closure
+      void window.innerWidth;
+    };
+    window.addEventListener('resize', onResize);
   }, [movie.id, movie.image]);
 
   const liked = isLiked(movie.id);
@@ -115,7 +122,7 @@ const MovieCard = ({ movie, onClick, showProgress }) => {
 
   return (
     <div
-      className="flex-shrink-0 w-44 md:w-52 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:z-10"
+      className="flex-shrink-0 w-44 md:w-52 cursor-pointer transform transition-all duration-300 hover:scale-110 hover:z-10 movie-card-overlap"
       onClick={() => onClick(movie)}
     >
       <div className="relative overflow-hidden rounded-md shadow-lg">
