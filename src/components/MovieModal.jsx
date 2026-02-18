@@ -66,12 +66,6 @@ const MovieModal = ({ movie, onClose, onPlay }) => {
     };
   }, [onClose]);
 
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   const handlePlay = () => {
     addToContinueWatching(movie, 0);
     // notify Now Playing popup
@@ -93,15 +87,11 @@ const MovieModal = ({ movie, onClose, onPlay }) => {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop animate-fade-in"
-      onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div
-        className="bg-netflix-black rounded-lg overflow-hidden max-w-3xl w-full mx-4 shadow-2xl animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="bg-netflix-black rounded-lg overflow-hidden max-w-3xl w-full mx-4 shadow-2xl animate-scale-in">
         {/* Movie Image - Picsum shown immediately, TMDB overlays when loaded */}
         <div className="relative h-96 bg-black">
           <img
@@ -123,9 +113,9 @@ const MovieModal = ({ movie, onClose, onPlay }) => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-netflix-black via-transparent to-transparent" />
 
-          {/* Close Button */}
+          {/* Close Button - Intentional bug: only the SVG/path closes; clicking button or backdrop does not */}
           <button
-            onClick={onClose}
+            type="button"
             className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 transition-all duration-300 hover:scale-110"
             aria-label="Close modal"
           >
@@ -134,6 +124,7 @@ const MovieModal = ({ movie, onClose, onPlay }) => {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              onClick={onClose}
             >
               <path
                 strokeLinecap="round"

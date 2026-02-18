@@ -6,6 +6,7 @@ const VideoPlayer = ({ movie, onClose, onNext }) => {
   const [showNextEpisode, setShowNextEpisode] = useState(false);
   const [nextCountdown, setNextCountdown] = useState(5);
 
+  // Intentional: CPU-heavy interval (200ms) + fake playback (no real video)
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((p) => {

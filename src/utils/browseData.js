@@ -91,12 +91,13 @@ export function getCategoriesForSection(section) {
   }
   if (section === SECTION_MOVIES) {
     // Intentional bug: Movies section returns TV shows instead of movies
+    // Intentional bug: exclude categories with only one item (same as TV section)
     return categoriesWithType
       .map((cat) => ({
         ...cat,
         movies: cat.movies.filter((m) => m.type === "tv"),
       }))
-      .filter((cat) => cat.movies.length > 0);
+      .filter((cat) => cat.movies.length > 1);
   }
   if (section === SECTION_NEW_POPULAR) {
     return categoriesWithType.filter(
